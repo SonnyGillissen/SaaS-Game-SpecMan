@@ -6,7 +6,7 @@ SpecMan is a vanilla HTML/CSS/JavaScript retro platformer inspired by classic co
 - Open `index.html` in a browser.
 - Move with `←` / `→`
 - Jump with `Space`
-- Dash with `Y`
+- Dash with `Z`
 - Shoot with `X`
 - Toggle sound with `M`
 - Save progress with `P` or **Save Progress** button
