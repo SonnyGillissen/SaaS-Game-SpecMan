@@ -3,7 +3,7 @@
 SpecMan is a vanilla HTML/CSS/JavaScript retro platformer inspired by classic console games.
 
 ## Play
-- Open `/tmp/workspace/SonnyGillissen/SaaS-Game-SpecMan/index.html` in a browser.
+- Open `index.html` in a browser.
 - Move with `←` / `→`
 - Jump with `Space`
 - Dash with `Z`

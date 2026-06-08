@@ -71,8 +71,8 @@ function tryLoad() {
       gameState.stageIndex = parsed.stageIndex;
       gameState.aiCompanion = !!parsed.aiCompanion;
     }
-  } catch {
-    // ignore corrupted save
+  } catch (err) {
+    console.warn("Failed to load saved progress:", err);
   }
 }
 
@@ -98,7 +98,21 @@ function showMessage(text) {
 
 function initAudio() {
   if (audioCtx) return;
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const AudioCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtor) {
+    soundOn = false;
+    toggleSoundBtn.textContent = "Sound: OFF";
+    showMessage("Audio not supported in this browser.");
+    return;
+  }
+  try {
+    audioCtx = new AudioCtor();
+  } catch (err) {
+    soundOn = false;
+    toggleSoundBtn.textContent = "Sound: OFF";
+    showMessage("Audio unavailable.");
+    console.warn("Failed to initialize audio context:", err);
+  }
 }
 
 function beep(freq, duration = 0.12, type = "square", gain = 0.03) {
