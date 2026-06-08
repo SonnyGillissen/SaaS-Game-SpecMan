@@ -9,7 +9,7 @@ SpecMan is a vanilla HTML/CSS/JavaScript retro platformer inspired by classic co
 - Dash with `Z`
 - Shoot with `X`
 - Toggle sound with `M`
-- Save progress with `P` or **Save Progress** button
+- Save progress with `S` or **Save Progress** button
 
 ## Features
 - Six integration lifecycle levels: Discovery, Requirements, Planning, Developing, Testing, Go Live
