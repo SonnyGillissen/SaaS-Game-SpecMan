@@ -54,7 +54,9 @@ const player = {
   onGround:false,
   hp:5, iFrames:0,
   facing:1,
-  walkTick:0
+  walkTick:0,
+  dashFrames:0,
+  dashCooldown:0
 };
 
 let gameState = {
@@ -137,13 +139,15 @@ function beep(freq, duration=0.12, type="square", gain=0.03) {
 
 function startBgm() {
   if (bgmTimer) clearInterval(bgmTimer);
-  const pattern = [262,330,392,523,392,330,294,349,440,523,587,523,440,392,330,294];
+  // Upbeat adventure melody: two rising-falling phrases in C major
+  const pattern = [523,659,784,659,523,440,392,330,698,880,1047,880,784,659,587,523];
   let i = 0;
   bgmTimer = setInterval(() => {
     if (!soundOn) return;
-    beep(pattern[i % pattern.length], 0.11, "square", 0.022);
+    const note = pattern[i % pattern.length];
+    if (note > 0) beep(note, 0.10, "square", 0.020);
     i++;
-  }, 180);
+  }, 160);
 }
 
 // ── MESSAGES ─────────────────────────────────────────────────────
@@ -158,9 +162,6 @@ function makePlatforms(si) {
   for (let x = 260; x < WORLD_W - 300; x += 230 + (si * 12 % 50)) {
     const y = 300 + (Math.floor(x / 115) % 5) * 30;
     list.push({ x, y, w:120 + (si % 3)*16, h:16, type:"brick" });
-  }
-  for (let i = 0; i < 8; i++) {
-    list.push({ x:320 + i*340, y:210 + (i%3)*36, w:24, h:24, type:"qblock" });
   }
   return list;
 }
@@ -204,6 +205,7 @@ function initStage() {
   player.vx = 0; player.vy = 0;
   player.hp = Math.max(player.hp, 3);
   player.walkTick = 0;
+  player.dashFrames = 0; player.dashCooldown = 0;
   gameState.effects   = { speed:0, shield:0, companion:0, bossDamage:0, jump:0 };
   gameState.platforms = makePlatforms(gameState.stageIndex);
   gameState.pickups   = makePickups(gameState.stageIndex);
@@ -226,7 +228,9 @@ function handleInput() {
   player.vx = 0;
   if (keys.has("ArrowLeft"))  { player.vx = -speed; player.facing = -1; }
   if (keys.has("ArrowRight")) { player.vx =  speed; player.facing =  1; }
-  if (keys.has("KeyZ")) player.vx *= 1.4;
+  if (player.dashFrames > 0) {
+    player.vx = player.facing * (BASE_SPEED * 3.5 + (gameState.effects.speed > 0 ? 2.5 : 0));
+  }
 }
 
 function physics() {
@@ -346,6 +350,8 @@ function tickEffects() {
     if (gameState.effects[k] > 0) gameState.effects[k]--;
   }
   if (player.iFrames > 0) player.iFrames--;
+  if (player.dashFrames > 0) player.dashFrames--;
+  if (player.dashCooldown > 0) player.dashCooldown--;
 }
 
 // ================================================================
@@ -467,22 +473,11 @@ function drawPlatforms(camX) {
   for (const p of gameState.platforms) {
     const x = p.x - camX;
     if (x + p.w < 0 || x > canvas.width) continue;
-    if (p.type === "qblock") {
-      ctx.fillStyle = "#d09000"; ctx.fillRect(x, p.y, p.w, p.h);
-      ctx.fillStyle = "#f0c020"; ctx.fillRect(x+2, p.y+2, p.w-4, 6);
-      ctx.fillStyle = "#a07000";
-      ctx.fillRect(x, p.y+p.h-3, p.w, 3);
-      ctx.fillRect(x, p.y, 3, p.h);
-      ctx.fillRect(x+p.w-3, p.y, 3, p.h);
-      ctx.fillStyle = "#ffe060"; ctx.font = "bold 13px monospace";
-      ctx.fillText("?", x + p.w/2, p.y+17);
-    } else {
-      ctx.fillStyle = "#8a4a18"; ctx.fillRect(x, p.y, p.w, p.h);
-      ctx.fillStyle = "#b06030"; ctx.fillRect(x, p.y, p.w, 4);
-      ctx.fillStyle = "#601a04";
-      for (let bx = 0; bx < p.w; bx += 20) ctx.fillRect(x+bx, p.y, 1, p.h);
-      ctx.fillRect(x, p.y + Math.floor(p.h/2), p.w, 1);
-    }
+    ctx.fillStyle = "#8a4a18"; ctx.fillRect(x, p.y, p.w, p.h);
+    ctx.fillStyle = "#b06030"; ctx.fillRect(x, p.y, p.w, 4);
+    ctx.fillStyle = "#601a04";
+    for (let bx = 0; bx < p.w; bx += 20) ctx.fillRect(x+bx, p.y, 1, p.h);
+    ctx.fillRect(x, p.y + Math.floor(p.h/2), p.w, 1);
   }
   ctx.textAlign = "left";
 }
@@ -691,7 +686,9 @@ function drawBoss(camX) {
   ctx.fillStyle = pct > 0.5 ? "#0f0" : pct > 0.25 ? "#fa0" : "#f00";
   ctx.fillRect(x-10, y-22, (boss.w+20)*pct, 8);
   ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.fillRect(x-10, y-22, boss.w+20, 2);
-  ctx.fillStyle = "#fff"; ctx.font = "10px monospace";
+  ctx.fillStyle = "#fff"; ctx.font = "bold 13px monospace";
+  ctx.strokeStyle = "rgba(0,0,0,.9)"; ctx.lineWidth = 3;
+  ctx.strokeText(boss.name, x-10, y-26);
   ctx.fillText(boss.name, x-10, y-26);
 }
 
@@ -846,9 +843,12 @@ function drawBossKraken(x,y,t) {
 // ── OVERLAY ──────────────────────────────────────────────────────
 function drawOverlay() {
   if (gameState.message) {
-    ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(140,12,680,40);
-    ctx.fillStyle = "#9fffd8"; ctx.font="16px monospace";
-    ctx.fillText(gameState.message, 156, 36);
+    ctx.fillStyle = "rgba(0,0,0,.78)"; ctx.fillRect(120,10,720,44);
+    ctx.strokeStyle = "rgba(0,0,0,.9)"; ctx.lineWidth = 3;
+    ctx.font = "bold 17px monospace";
+    ctx.strokeText(gameState.message, 140, 37);
+    ctx.fillStyle = "#9fffd8";
+    ctx.fillText(gameState.message, 140, 37);
   }
   if (gameState.gameWon) {
     ctx.fillStyle = "rgba(0,0,0,.86)"; ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -907,6 +907,12 @@ document.addEventListener("keydown", e => {
     const boost = gameState.effects.jump > 0 ? 2.4 : 0;
     player.vy = -(JUMP_STR + boost);
     beep(520,0.08,"square",0.03);
+  }
+  if (e.code==="KeyZ" && player.dashCooldown === 0 && !gameState.gameWon) {
+    player.dashFrames = 12;
+    player.dashCooldown = 50;
+    beep(440, 0.05, "square", 0.028);
+    beep(880, 0.09, "square", 0.018);
   }
   if (e.code==="KeyM") {
     soundOn = !soundOn;
