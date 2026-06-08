@@ -34,11 +34,16 @@ const saveProgressBtn = document.getElementById("saveProgress");
 const resetProgressBtn= document.getElementById("resetProgress");
 
 // ── CONSTANTS ────────────────────────────────────────────────────
-const WORLD_W    = 2800;
-const FLOOR_Y    = 470;
-const GRAVITY    = 0.55;
-const BASE_SPEED = 3.4;
-const JUMP_STR   = 11.8;
+const WORLD_W            = 2800;
+const FLOOR_Y            = 470;
+const GRAVITY            = 0.55;
+const BASE_SPEED         = 3.4;
+const JUMP_STR           = 11.8;
+const MAX_HP             = 7;
+const BASE_BOSS_DAMAGE   = 0.03;
+const POWERUP_BOSS_BONUS = 0.05;
+const COMPANION_BONUS    = 0.04;
+const GAME_CONTROL_KEYS  = ["ArrowLeft","ArrowRight","Space","KeyZ","KeyM","KeyP"];
 
 // ── STATE ────────────────────────────────────────────────────────
 const keys = new Set();
@@ -74,7 +79,7 @@ function tryLoad() {
   if (!saved) return;
   try {
     const p = JSON.parse(saved);
-    if (typeof p.stageIndex === "number" && p.stageIndex >= 0 && p.stageIndex < STAGES.length) {
+    if (p && typeof p === "object" && typeof p.stageIndex === "number" && p.stageIndex >= 0 && p.stageIndex < STAGES.length) {
       gameState.stageIndex = p.stageIndex;
       gameState.aiCompanion = typeof p.aiCompanion === "boolean" ? p.aiCompanion : false;
     }
@@ -252,7 +257,7 @@ function physics() {
 
 // ── POWER-UPS ────────────────────────────────────────────────────
 function applyPower(effect) {
-  if (effect === "heal") player.hp = Math.min(7, player.hp + 1);
+  if (effect === "heal") player.hp = Math.min(MAX_HP, player.hp + 1);
   else gameState.effects[effect] = 600;
   beep(700, 0.13, "triangle", 0.04);
 }
@@ -312,9 +317,9 @@ function updateBoss() {
   const cx = player.x + player.w / 2;
   const bx = boss.x  + boss.w  / 2;
   if (Math.abs(cx - bx) < 60 && Math.abs(player.y - boss.y) < 90) {
-    const dmg = 0.03
-      + (gameState.effects.bossDamage > 0 ? 0.05 : 0)
-      + ((gameState.aiCompanion || gameState.effects.companion > 0) ? 0.04 : 0);
+    const dmg = BASE_BOSS_DAMAGE
+      + (gameState.effects.bossDamage > 0 ? POWERUP_BOSS_BONUS : 0)
+      + ((gameState.aiCompanion || gameState.effects.companion > 0) ? COMPANION_BONUS : 0);
     boss.hp -= dmg;
   }
 
@@ -897,7 +902,7 @@ function loop() {
 
 // ── EVENT HANDLERS ───────────────────────────────────────────────
 document.addEventListener("keydown", e => {
-  if (["ArrowLeft","ArrowRight","Space","KeyZ","KeyM","KeyP"].includes(e.code)) e.preventDefault();
+  if (GAME_CONTROL_KEYS.includes(e.code)) e.preventDefault();
   if (e.code==="Space" && player.onGround && !gameState.gameWon) {
     const boost = gameState.effects.jump > 0 ? 2.4 : 0;
     player.vy = -(JUMP_STR + boost);
