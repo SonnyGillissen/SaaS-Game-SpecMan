@@ -69,7 +69,7 @@ function tryLoad() {
     const parsed = JSON.parse(saved);
     if (typeof parsed.stageIndex === "number" && parsed.stageIndex >= 0 && parsed.stageIndex < STAGES.length) {
       gameState.stageIndex = parsed.stageIndex;
-      gameState.aiCompanion = !!parsed.aiCompanion;
+      gameState.aiCompanion = typeof parsed.aiCompanion === "boolean" ? parsed.aiCompanion : false;
     }
   } catch (err) {
     console.warn("Failed to load saved progress:", err);
@@ -406,6 +406,7 @@ function updateHud() {
   stageNameEl.textContent = stage.name;
   bossNameEl.textContent = stage.boss;
   healthEl.textContent = `${"█".repeat(player.hp)} (${player.hp})`;
+  healthEl.setAttribute("aria-label", `Health ${player.hp} out of 7`);
 
   const active = Object.entries(gameState.effects)
     .filter(([, v]) => v > 0)
