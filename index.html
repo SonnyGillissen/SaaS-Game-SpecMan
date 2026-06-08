@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SpecMan – Retro Integration Platformer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="console-shell">
+
+  <!-- ══ TOP BAR ══ -->
+  <div class="console-top">
+    <span class="screw" aria-hidden="true"></span>
+    <h1 class="console-title">SPEC<em>MAN</em></h1>
+    <div class="vent-row" aria-hidden="true"></div>
+    <span class="power-led" aria-label="Power on"></span>
+    <span class="screw" aria-hidden="true"></span>
+  </div>
+
+  <!-- ══ SCREEN DECK ══ -->
+  <div class="screen-deck">
+    <div class="screen-bezel">
+
+      <!-- LCD status strip -->
+      <div class="hud-bar" aria-label="Game status">
+        <span class="hud-cell">STG: <strong id="stageName"></strong></span>
+        <span class="hud-cell">BOSS: <strong id="bossName"></strong></span>
+        <span class="hud-cell">HP: <strong id="health" aria-live="polite"></strong></span>
+        <span class="hud-cell">💰 <strong id="coins"></strong></span>
+        <span class="hud-cell">FX: <strong id="powerups"></strong></span>
+        <span class="hud-cell">PROG: <strong id="progress"></strong></span>
+      </div>
+
+      <!-- Game canvas + CRT scanlines -->
+      <div class="screen-window">
+        <canvas id="game" width="960" height="540" aria-label="SpecMan game area"></canvas>
+        <div class="scanlines" aria-hidden="true"></div>
+        <div class="screen-glare" aria-hidden="true"></div>
+      </div>
+
+    </div><!-- /screen-bezel -->
+  </div><!-- /screen-deck -->
+
+  <!-- ══ CONTROL DECK ══ -->
+  <div class="control-deck">
+
+    <!-- LEFT – D-pad -->
+    <div class="ctrl-zone ctrl-left">
+      <div class="dpad" aria-label="Move: Arrow keys">
+        <div class="dp-top">
+          <span class="dp-btn dp-up"    aria-hidden="true">▲</span>
+        </div>
+        <div class="dp-mid">
+          <span class="dp-btn dp-left"  aria-hidden="true">◀</span>
+          <span class="dp-center"       aria-hidden="true"></span>
+          <span class="dp-btn dp-right" aria-hidden="true">▶</span>
+        </div>
+        <div class="dp-bot">
+          <span class="dp-btn dp-down"  aria-hidden="true">▼</span>
+        </div>
+      </div>
+      <p class="ctrl-label">← → MOVE</p>
+    </div>
+
+    <!-- CENTER – system + cartridge -->
+    <div class="ctrl-zone ctrl-center">
+      <div class="sys-buttons">
+        <button id="toggleSound"   class="sys-btn" type="button">♪ SND ON</button>
+        <button id="saveProgress"  class="sys-btn" type="button">💾 SAVE</button>
+        <button id="resetProgress" class="sys-btn" type="button">↺ RST</button>
+      </div>
+      <div class="cartridge-well" aria-hidden="true">
+        <div class="cartridge-sticker">
+          <span class="cart-title">SPECMAN</span>
+          <span class="cart-sub">Integration Adventures v1</span>
+        </div>
+      </div>
+      <p class="subtle-brand">
+        powered by
+        <a href="https://www.sonnyasaservice.nl" target="_blank" rel="noopener noreferrer">Sonny&nbsp;as&nbsp;a&nbsp;Service</a>
+      </p>
+    </div>
+
+    <!-- RIGHT – action buttons -->
+    <div class="ctrl-zone ctrl-right">
+      <p class="ctrl-label">SPACE JUMP · Z DASH · X SHOOT</p>
+      <div class="action-pad" aria-label="SPACE=Jump, Y=Dash, X=Shoot, M=Sound, P=Save">
+        <div class="ap-row ap-top">
+          <span class="abtn abtn-x" title="SPACE – Jump" aria-label="Cross button: SPACE to Jump">⎵<br><small>JUMP</small></span>
+        </div>
+        <div class="ap-row ap-mid">
+          <span class="abtn abtn-y" title="Y – Dash" aria-label="Z button: Z or Y to Dash">Z<br><small>DASH</small></span>
+          <span class="ap-gap"></span>
+          <span class="abtn abtn-a" title="X – Shoot" aria-label="X button: press X or A key to Shoot">X<br><small>SHOOT</small></span>
+        </div>
+        <div class="ap-row ap-bot">
+          <span class="abtn abtn-b" title="P – Save progress" aria-label="B button: P to Save progress">B<br><small>SAVE</small></span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /control-deck -->
+
+  <!-- ══ BOTTOM BAR ══ -->
+  <div class="console-bottom">
+    <span class="screw" aria-hidden="true"></span>
+    <div class="speaker-grille" aria-hidden="true"></div>
+    <span class="screw" aria-hidden="true"></span>
+  </div>
+
+</div><!-- /console-shell -->
+
+<script src="game.js"></script>
+</body>
+</html>
