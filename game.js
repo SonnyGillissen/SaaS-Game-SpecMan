@@ -397,7 +397,8 @@ function hurtPlayer() {
   if (activeKeys.length > 0) {
     const k = activeKeys[Math.floor(Math.random() * activeKeys.length)];
     gameState.effects[k] = 0;
-    showMessage("Power-up lost: " + k + "!");
+    const pu = POWER_UPS.find(p => p.effect === k);
+    showMessage("Power-up lost: " + (pu ? pu.name : k) + "!");
   } else {
     player.hp -= 1;
   }
