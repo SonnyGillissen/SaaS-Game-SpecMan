@@ -43,7 +43,7 @@ const MAX_HP             = 7;
 const BASE_BOSS_DAMAGE   = 0.03;
 const POWERUP_BOSS_BONUS = 0.05;
 const COMPANION_BONUS    = 0.04;
-const GAME_CONTROL_KEYS  = ["ArrowLeft","ArrowRight","Space","KeyZ","KeyM","KeyP"];
+const GAME_CONTROL_KEYS  = ["ArrowLeft","ArrowRight","Space","KeyY","KeyM","KeyP"];
 
 // ── STATE ────────────────────────────────────────────────────────
 const keys = new Set();
@@ -139,15 +139,15 @@ function beep(freq, duration=0.12, type="square", gain=0.03) {
 
 function startBgm() {
   if (bgmTimer) clearInterval(bgmTimer);
-  // Upbeat adventure melody: two rising-falling phrases in C major
-  const pattern = [523,659,784,659,523,440,392,330,698,880,1047,880,784,659,587,523];
+  // Soft ambient loop: pentatonic descending/ascending phrase in C major
+  const pattern = [0,523,0,440,392,0,440,523,0,392,329,0,329,392,0,523];
   let i = 0;
   bgmTimer = setInterval(() => {
     if (!soundOn) return;
     const note = pattern[i % pattern.length];
-    if (note > 0) beep(note, 0.10, "square", 0.020);
+    if (note > 0) beep(note, 0.18, "sine", 0.012);
     i++;
-  }, 160);
+  }, 300);
 }
 
 // ── MESSAGES ─────────────────────────────────────────────────────
@@ -300,6 +300,7 @@ function updateMinions() {
 // ── BOSS / HURT ──────────────────────────────────────────────────
 function hurtPlayer() {
   if (player.iFrames > 0) return;
+  if (player.dashFrames > 0) return;
   if (gameState.effects.shield <= 0) player.hp -= 1;
   player.iFrames = 85;
   beep(180, 0.2, "sawtooth", 0.035);
@@ -908,7 +909,7 @@ document.addEventListener("keydown", e => {
     player.vy = -(JUMP_STR + boost);
     beep(520,0.08,"square",0.03);
   }
-  if (e.code==="KeyZ" && player.dashCooldown === 0 && !gameState.gameWon) {
+  if (e.code==="KeyY" && player.dashCooldown === 0 && !gameState.gameWon) {
     player.dashFrames = 12;
     player.dashCooldown = 50;
     beep(440, 0.05, "square", 0.028);

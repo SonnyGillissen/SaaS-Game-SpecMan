@@ -247,7 +247,7 @@ body {
 }
 
 .ctrl-label {
-  font-size: .64rem;
+  font-size: .82rem;
   font-weight: bold;
   letter-spacing: 1px;
   color: #5a5450;
@@ -302,7 +302,7 @@ body {
   border-bottom-color: #484440;
   border-radius: 12px;
   padding: 5px 9px;
-  font-size: .6rem;
+  font-size: .75rem;
   font-family: inherit;
   cursor: pointer;
   letter-spacing: .4px;
@@ -385,7 +385,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: .75rem;
+  font-size: .95rem;
   font-weight: bold;
   line-height: 1.15;
   color: rgba(255,255,255,.92);
@@ -394,7 +394,7 @@ body {
   transition: transform .06s;
 }
 .abtn:hover { transform: scale(1.08); }
-.abtn small { font-size: .44rem; opacity: .9; letter-spacing: .6px; }
+.abtn small { font-size: .6rem; opacity: .9; letter-spacing: .6px; }
 
 .abtn-x { background: radial-gradient(circle at 38% 32%, #aa77ee, var(--btn-x)); box-shadow: 0 4px 0 #3a1870, inset 0 1px rgba(255,255,255,.28); }
 .abtn-y { background: radial-gradient(circle at 38% 32%, #5588ee, var(--btn-y)); box-shadow: 0 4px 0 #102050, inset 0 1px rgba(255,255,255,.28); }
