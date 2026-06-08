@@ -46,7 +46,7 @@ const POWERUP_BOSS_BONUS = 0.05;
 const COMPANION_BONUS    = 0.04;
 const BULLET_SPEED       = 9;
 const BULLET_BOSS_DMG    = 0.5;
-const GAME_CONTROL_KEYS  = ["ArrowLeft","ArrowRight","Space","KeyY","KeyX","KeyM","KeyP"];
+const GAME_CONTROL_KEYS  = ["ArrowLeft","ArrowRight","Space","KeyY","KeyX","KeyA","KeyM","KeyP"];
 
 // ── STATE ────────────────────────────────────────────────────────
 const keys = new Set();
@@ -1067,13 +1067,13 @@ document.addEventListener("keydown", e => {
     player.vy = -(JUMP_STR + boost);
     beep(520,0.08,"square",0.03);
   }
-  if (e.code==="KeyY" && player.dashCooldown === 0 && !gameState.gameWon) {
+  if (e.code==="KeyY" || e.code==="KeyZ" && player.dashCooldown === 0 && !gameState.gameWon) {
     player.dashFrames = 12;
     player.dashCooldown = 50;
     beep(440, 0.05, "square", 0.028);
     beep(880, 0.09, "square", 0.018);
   }
-  if (e.code==="KeyX" && player.shootCooldown === 0 && !gameState.gameWon) {
+  if (e.code==="KeyX" || e.code==="KeyA" && player.shootCooldown === 0 && !gameState.gameWon) {
     shootBullet();
     player.shootCooldown = 18;
   }
