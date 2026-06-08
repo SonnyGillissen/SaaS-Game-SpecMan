@@ -201,7 +201,7 @@ function makeBoss(si) {
   return {
     x:WORLD_W - 200, y:FLOOR_Y - 90,
     w:80, h:90,
-    hp:10 + si*2, dir:-1, moveTimer:0,
+    hp:5 + si*6, dir:-1, moveTimer:0,
     name:STAGES[si].boss
   };
 }
@@ -414,7 +414,7 @@ function updateBoss() {
   const boss = gameState.boss;
   boss.moveTimer++;
   if (boss.moveTimer % 90 === 0) boss.dir *= -1;
-  boss.x += boss.dir * 1.7;
+  boss.x += boss.dir * (1.2 + gameState.stageIndex * 0.18);
   boss.x = Math.max(WORLD_W - 320, Math.min(WORLD_W - 80, boss.x));
 
   if (rectHit(player, boss)) hurtPlayer();
@@ -834,7 +834,7 @@ function drawBoss(camX) {
     case 4: drawBossHydra(x,y,t);            break;
     case 5: drawBossKraken(x,y,t);           break;
   }
-  const maxHp = 10 + gameState.stageIndex*2;
+  const maxHp = 5 + gameState.stageIndex*6;
   const pct   = Math.max(0, boss.hp / maxHp);
   ctx.fillStyle = "#400"; ctx.fillRect(x-10, y-22, boss.w+20, 8);
   ctx.fillStyle = pct > 0.5 ? "#0f0" : pct > 0.25 ? "#fa0" : "#f00";
@@ -1093,6 +1093,39 @@ toggleSoundBtn.addEventListener("click", () => {
 });
 saveProgressBtn.addEventListener("click",  saveProgress);
 resetProgressBtn.addEventListener("click", resetProgress);
+
+// ── ON-SCREEN CONTROLS ───────────────────────────────────────────
+(function setupOnScreenControls() {
+  function bindBtn(selector, keyCode, onDown, onUp) {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    function down(e) { e.preventDefault(); if (onDown) onDown(); else keys.add(keyCode); }
+    function up(e)   { e.preventDefault(); if (onUp)   onUp();   else keys.delete(keyCode); }
+    el.addEventListener("pointerdown",  down);
+    el.addEventListener("pointerup",    up);
+    el.addEventListener("pointerleave", up);
+  }
+
+  bindBtn(".dp-left",  "ArrowLeft");
+  bindBtn(".dp-right", "ArrowRight");
+  bindBtn(".dp-up",    "Space");
+  bindBtn(".abtn-x",   null,
+    () => { if (player.onGround && !gameState.gameWon) { player.vy = -13; player.onGround = false; } },
+    () => {}
+  );
+  bindBtn(".abtn-y",   null,
+    () => { if (player.dashCooldown === 0 && !gameState.gameWon) {
+              player.dashFrames = 12; player.dashCooldown = 50;
+              beep(440, 0.05, "square", 0.028); beep(880, 0.09, "square", 0.018); } },
+    () => {}
+  );
+  bindBtn(".abtn-a",   null,
+    () => { if (player.shootCooldown === 0 && !gameState.gameWon) {
+              shootBullet(); player.shootCooldown = 18; } },
+    () => {}
+  );
+  bindBtn(".abtn-b",   null, saveProgress, () => {});
+})();
 
 // ── BOOT ─────────────────────────────────────────────────────────
 tryLoad();
