@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SpecMan - Retro Integration Platformer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="console-shell">
+    <header class="hud-header">
+      <h1>SPECMAN</h1>
+      <p class="subtle-brand">powered by <a href="https://www.sonnyasaservice.nl" target="_blank" rel="noopener noreferrer">Sonny as a Service</a></p>
+    </header>
+
+    <section class="status-bar" aria-label="Game status">
+      <div>Stage: <span id="stageName"></span></div>
+      <div>Boss: <span id="bossName"></span></div>
+      <div>Health: <span id="health"></span></div>
+      <div>Power-Ups: <span id="powerups"></span></div>
+      <div>Progress: <span id="progress"></span></div>
+    </section>
+
+    <canvas id="game" width="960" height="540" aria-label="SpecMan game area"></canvas>
+
+    <section class="controls-panel">
+      <button id="toggleSound" type="button">Sound: ON</button>
+      <button id="saveProgress" type="button">Save Progress</button>
+      <button id="resetProgress" type="button">Reset Save</button>
+    </section>
+
+    <details class="instruction-cartridge" open>
+      <summary>🎮 Cartridge Back Label (Controls)</summary>
+      <ul>
+        <li><kbd>←</kbd><kbd>→</kbd> Move</li>
+        <li><kbd>Space</kbd> Jump</li>
+        <li><kbd>Z</kbd> Dash</li>
+        <li><kbd>M</kbd> Toggle sound</li>
+        <li><kbd>P</kbd> Save progress</li>
+      </ul>
+      <p>Collect power-ups, beat each integration-stage boss, and ship to Go Live.</p>
+    </details>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
