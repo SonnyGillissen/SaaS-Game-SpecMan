@@ -118,6 +118,7 @@ function initAudio() {
 function beep(freq, duration = 0.12, type = "square", gain = 0.03) {
   if (!soundOn) return;
   initAudio();
+  if (!audioCtx) return;
   const osc = audioCtx.createOscillator();
   const amp = audioCtx.createGain();
   osc.type = type;
