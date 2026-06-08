@@ -46,7 +46,7 @@ const POWERUP_BOSS_BONUS = 0.05;
 const COMPANION_BONUS    = 0.04;
 const BULLET_SPEED       = 9;
 const BULLET_BOSS_DMG    = 0.5;
-const GAME_CONTROL_KEYS  = ["ArrowLeft","ArrowRight","Space","KeyY","KeyX","KeyA","KeyM","KeyP"];
+const GAME_CONTROL_KEYS  = ["ArrowLeft","ArrowRight","Space","KeyY","KeyX","KeyA","KeyM","KeyP","KeyS"];
 
 // ── STATE ────────────────────────────────────────────────────────
 const keys = new Set();
@@ -1081,7 +1081,7 @@ document.addEventListener("keydown", e => {
     soundOn = !soundOn;
     toggleSoundBtn.textContent = "\u266a SND " + (soundOn?"ON":"OFF");
   }
-  if (e.code==="KeyP") saveProgress();
+  if (e.code==="KeyP" || e.code==="KeyS") saveProgress();
   keys.add(e.code);
 });
 
