@@ -348,14 +348,14 @@ body {
 }
 
 .subtle-brand {
-  font-size: .58rem;
-  color: #5a5450;
+  font-size: .72rem;
+  color: #4a4448;
   text-align: center;
   line-height: 1.6;
 }
 
 .subtle-brand a {
-  color: #8a7cc0;
+  color: #7a6ab8;
   text-decoration: none;
 }
 .subtle-brand a:hover { text-decoration: underline; }

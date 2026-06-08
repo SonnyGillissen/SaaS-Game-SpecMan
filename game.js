@@ -29,6 +29,7 @@ const bossNameEl      = document.getElementById("bossName");
 const healthEl        = document.getElementById("health");
 const powerupsEl      = document.getElementById("powerups");
 const progressEl      = document.getElementById("progress");
+const coinsEl         = document.getElementById("coins");
 const toggleSoundBtn  = document.getElementById("toggleSound");
 const saveProgressBtn = document.getElementById("saveProgress");
 const resetProgressBtn= document.getElementById("resetProgress");
@@ -43,20 +44,23 @@ const MAX_HP             = 7;
 const BASE_BOSS_DAMAGE   = 0.03;
 const POWERUP_BOSS_BONUS = 0.05;
 const COMPANION_BONUS    = 0.04;
-const GAME_CONTROL_KEYS  = ["ArrowLeft","ArrowRight","Space","KeyY","KeyM","KeyP"];
+const BULLET_SPEED       = 9;
+const BULLET_BOSS_DMG    = 0.5;
+const GAME_CONTROL_KEYS  = ["ArrowLeft","ArrowRight","Space","KeyY","KeyX","KeyM","KeyP"];
 
 // ── STATE ────────────────────────────────────────────────────────
 const keys = new Set();
 
 const player = {
-  x:80, y:410, w:30, h:48,
+  x:80, y:410, w:30, h:60,
   vx:0, vy:0,
   onGround:false,
   hp:5, iFrames:0,
   facing:1,
   walkTick:0,
   dashFrames:0,
-  dashCooldown:0
+  dashCooldown:0,
+  shootCooldown:0
 };
 
 let gameState = {
@@ -65,6 +69,10 @@ let gameState = {
   platforms:[],
   pickups:[],
   minions:[],
+  bullets:[],
+  coinPickups:[],
+  heartPickups:[],
+  coins:0,
   message:"",
   gameWon:false,
   aiCompanion:false,
@@ -173,6 +181,22 @@ function makePickups(si) {
   });
 }
 
+function makeCoins(si) {
+  return Array.from({ length:14 }, (_, i) => ({
+    x: 210 + i * 185 + (si * 37 % 80),
+    y: 160 + (i % 6) * 52,
+    taken: false
+  }));
+}
+
+function makeHearts(si) {
+  return Array.from({ length:3 }, (_, i) => ({
+    x: 650 + i * 780 + si * 55,
+    y: 200 + (i % 3) * 80,
+    taken: false
+  }));
+}
+
 function makeBoss(si) {
   return {
     x:WORLD_W - 200, y:FLOOR_Y - 90,
@@ -205,12 +229,15 @@ function initStage() {
   player.vx = 0; player.vy = 0;
   player.hp = Math.max(player.hp, 3);
   player.walkTick = 0;
-  player.dashFrames = 0; player.dashCooldown = 0;
+  player.dashFrames = 0; player.dashCooldown = 0; player.shootCooldown = 0;
   gameState.effects   = { speed:0, shield:0, companion:0, bossDamage:0, jump:0 };
   gameState.platforms = makePlatforms(gameState.stageIndex);
   gameState.pickups   = makePickups(gameState.stageIndex);
   gameState.boss      = makeBoss(gameState.stageIndex);
   gameState.minions   = makeMinions(gameState.stageIndex);
+  gameState.bullets   = [];
+  gameState.coinPickups  = makeCoins(gameState.stageIndex);
+  gameState.heartPickups = makeHearts(gameState.stageIndex);
 }
 
 // ── HELPERS ──────────────────────────────────────────────────────
@@ -275,6 +302,71 @@ function updatePickups() {
   }
 }
 
+// ── SHOOTING ─────────────────────────────────────────────────────
+function shootBullet() {
+  const speedBoost = gameState.effects.speed > 0 ? 4 : 0;
+  const dmgMult    = gameState.effects.bossDamage > 0 ? 2 : 1;
+  gameState.bullets.push({
+    x: player.x + (player.facing > 0 ? player.w + 2 : -2),
+    y: player.y + 18,
+    vx: player.facing * (BULLET_SPEED + speedBoost),
+    dmgBoss: BULLET_BOSS_DMG * dmgMult,
+    travel: 0,
+    active: true
+  });
+  beep(880, 0.05, "square", 0.025);
+  beep(1200, 0.04, "square", 0.015);
+}
+
+function updateBullets() {
+  for (const b of gameState.bullets) {
+    if (!b.active) continue;
+    b.x += b.vx;
+    b.travel += Math.abs(b.vx);
+    if (b.travel > 640 || b.x < 0 || b.x > WORLD_W) { b.active = false; continue; }
+
+    const bHit = { x:b.x - 5, y:b.y - 3, w:10, h:6 };
+    if (rectHit(bHit, gameState.boss)) {
+      gameState.boss.hp -= b.dmgBoss;
+      b.active = false;
+      beep(260, 0.08, "sawtooth", 0.03);
+      continue;
+    }
+    for (const m of gameState.minions) {
+      if (!m.alive) continue;
+      if (rectHit(bHit, m)) {
+        m.alive = false; m.stompFlash = 22;
+        b.active = false;
+        beep(660, 0.1, "triangle", 0.04);
+        break;
+      }
+    }
+  }
+  if (gameState.bullets.length > 40) {
+    gameState.bullets = gameState.bullets.filter(b => b.active);
+  }
+}
+
+// ── COINS & HEARTS ────────────────────────────────────────────────
+function updateCoinsHearts() {
+  for (const c of gameState.coinPickups) {
+    if (!c.taken && rectHit(player, { x:c.x-8, y:c.y-8, w:16, h:16 })) {
+      c.taken = true;
+      gameState.coins++;
+      beep(1047, 0.05, "sine", 0.03);
+      beep(1319, 0.07, "sine", 0.03);
+    }
+  }
+  for (const h of gameState.heartPickups) {
+    if (!h.taken && rectHit(player, { x:h.x-10, y:h.y-10, w:20, h:20 })) {
+      h.taken = true;
+      player.hp = Math.min(MAX_HP, player.hp + 1);
+      beep(700, 0.13, "triangle", 0.04);
+      showMessage("\u2764 Health restored!");
+    }
+  }
+}
+
 // ── MINIONS ──────────────────────────────────────────────────────
 function updateMinions() {
   for (const m of gameState.minions) {
@@ -301,7 +393,14 @@ function updateMinions() {
 function hurtPlayer() {
   if (player.iFrames > 0) return;
   if (player.dashFrames > 0) return;
-  if (gameState.effects.shield <= 0) player.hp -= 1;
+  const activeKeys = Object.keys(gameState.effects).filter(k => gameState.effects[k] > 0);
+  if (activeKeys.length > 0) {
+    const k = activeKeys[Math.floor(Math.random() * activeKeys.length)];
+    gameState.effects[k] = 0;
+    showMessage("Power-up lost: " + k + "!");
+  } else {
+    player.hp -= 1;
+  }
   player.iFrames = 85;
   beep(180, 0.2, "sawtooth", 0.035);
   if (player.hp <= 0) {
@@ -353,6 +452,7 @@ function tickEffects() {
   if (player.iFrames > 0) player.iFrames--;
   if (player.dashFrames > 0) player.dashFrames--;
   if (player.dashCooldown > 0) player.dashCooldown--;
+  if (player.shootCooldown > 0) player.shootCooldown--;
 }
 
 // ================================================================
@@ -497,6 +597,58 @@ function drawPickups(camX) {
     ctx.fillStyle = "rgba(0,0,0,.18)";   ctx.fillRect(x, py+25, 28, 3);
     ctx.font = "17px monospace"; ctx.fillStyle = "#000";
     ctx.fillText(p.icon, x+3, py+20);
+  }
+}
+
+// ── COINS & HEARTS ────────────────────────────────────────────────
+function drawCoinsHearts(camX) {
+  const t = Date.now() / 800;
+
+  for (const c of gameState.coinPickups) {
+    if (c.taken) continue;
+    const cx = c.x - camX;
+    if (cx + 12 < 0 || cx > canvas.width) continue;
+    const bob = Math.sin(t + c.x * 0.02) * 2;
+    const cy = c.y + bob;
+    ctx.fillStyle = "#f0c420";
+    ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#c89010";
+    ctx.beginPath(); ctx.arc(cx, cy, 7, Math.PI*0.25, Math.PI*1.25); ctx.fill();
+    ctx.fillStyle = "#ffe060";
+    ctx.beginPath(); ctx.arc(cx-1, cy-1, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#fff8a0";
+    ctx.fillRect(cx-1, cy-4, 2, 8);
+  }
+
+  for (const h of gameState.heartPickups) {
+    if (h.taken) continue;
+    const hx = h.x - camX;
+    if (hx + 14 < 0 || hx > canvas.width) continue;
+    const bob = Math.sin(t + h.x * 0.025) * 3;
+    const hy = h.y + bob;
+    ctx.fillStyle = "#ff4466";
+    ctx.fillRect(hx-4, hy-3, 3, 2);
+    ctx.fillRect(hx+1, hy-3, 3, 2);
+    ctx.fillRect(hx-5, hy-1, 10, 4);
+    ctx.fillRect(hx-4, hy+3, 8, 2);
+    ctx.fillRect(hx-3, hy+5, 6, 2);
+    ctx.fillRect(hx-2, hy+7, 4, 1);
+    ctx.fillRect(hx-1, hy+8, 2, 1);
+    ctx.fillStyle = "#ff99bb";
+    ctx.fillRect(hx-3, hy-2, 2, 2);
+  }
+}
+
+// ── BULLETS ──────────────────────────────────────────────────────
+function drawBullets(camX) {
+  for (const b of gameState.bullets) {
+    if (!b.active) continue;
+    const bx = b.x - camX;
+    if (bx < -12 || bx > canvas.width + 12) continue;
+    ctx.fillStyle = "#ffdd00";
+    ctx.fillRect(bx - 6, b.y - 3, 12, 6);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(bx - 3, b.y - 1, 6, 2);
   }
 }
 
@@ -876,6 +1028,7 @@ function updateHud() {
     .filter(([,v]) => v>0).map(([k]) => k).join(", ");
   powerupsEl.textContent  = active || "none";
   progressEl.textContent  = (gameState.stageIndex+1) + " / " + STAGES.length;
+  coinsEl.textContent     = gameState.coins;
 }
 
 // ── MAIN LOOP ─────────────────────────────────────────────────────
@@ -885,6 +1038,8 @@ function loop() {
     handleInput();
     physics();
     updatePickups();
+    updateCoinsHearts();
+    updateBullets();
     updateMinions();
     updateBoss();
     tickEffects();
@@ -893,9 +1048,11 @@ function loop() {
   drawDecorations(camX);
   drawPlatforms(camX);
   drawPickups(camX);
+  drawCoinsHearts(camX);
   drawMinions(camX);
   drawBoss(camX);
   drawPlayer(camX);
+  drawBullets(camX);
   drawOverlay();
   updateHud();
   requestAnimationFrame(loop);
@@ -914,6 +1071,10 @@ document.addEventListener("keydown", e => {
     player.dashCooldown = 50;
     beep(440, 0.05, "square", 0.028);
     beep(880, 0.09, "square", 0.018);
+  }
+  if (e.code==="KeyX" && player.shootCooldown === 0 && !gameState.gameWon) {
+    shootBullet();
+    player.shootCooldown = 18;
   }
   if (e.code==="KeyM") {
     soundOn = !soundOn;
